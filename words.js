@@ -7,5 +7,15 @@ const WORDS = [
   { id: 3, chinese: "隔絕", english: "insulate", pos: "v." },
   { id: 4, chinese: "不透明的", english: "opaque", pos: "adj." },
   { id: 5, chinese: "有浮力的", english: "buoyant", pos: "adj." },
+  { id: 6, chinese: "翻覆", english: "capsize", pos: "v." },
+  { id: 7, chinese: "照明、闡明", english: "illuminate", pos: "v." },
+  { id: 8, chinese: "變形、扣住", english: "buckle", pos: "v." },
+  { id: 9, chinese: "熔爐", english: "furnace", pos: "n." },
+  { id: 10, chinese: "時間的、世俗的", english: "temporal", pos: "adj." },
+  { id: 11, chinese: "有彈性的", english: "elastic", pos: "adj." },
+  { id: 12, chinese: "恢復", english: "revert", pos: "v." },
+  
+
+
 
 ];

@@ -6,6 +6,7 @@ const App = {
   isFlipped: false,
   progressChart: null,
   dailyChart: null,
+  exportImportBound: false,
 
   init() {
     this.setupEventListeners();
@@ -21,6 +22,7 @@ const App = {
     document.getElementById('flashcard').addEventListener('click', () => this.flipCard());
 
     // 評分按鈕
+    document.getElementById('rating4').addEventListener('click', () => this.rateWord(4));
     document.getElementById('rating3').addEventListener('click', () => this.rateWord(3));
     document.getElementById('rating2').addEventListener('click', () => this.rateWord(2));
     document.getElementById('rating1').addEventListener('click', () => this.rateWord(1));
@@ -105,7 +107,7 @@ const App = {
     
     card.innerHTML = `
       <div class="card-front">
-        <div class="word-level">熟悉度: ${progress.level === 0 ? '未學習' : progress.level + ' 級'}</div>
+        <div class="word-level">熟悉度: ${progress.level === 0 ? '未學習' : progress.level + ' / 4'}</div>
         <div class="word-text">${word.english}</div>
         <div class="flip-hint">點擊翻轉</div>
       </div>
@@ -144,12 +146,40 @@ const App = {
     this.updateStatistics();
     this.renderProgressChart();
     this.renderDailyChart();
+    this.renderHeatmap();
+    this.renderWordRankings();
     this.filterWords('all');
+    
+    // 綁定匯出/匯入按鈕（只綁定一次）
+    if (!this.exportImportBound) {
+      this.setupExportImport();
+      this.exportImportBound = true;
+    }
+  },
+  
+  setupExportImport() {
+    // 匯出按鈕
+    document.getElementById('exportBtn').addEventListener('click', () => this.exportProgress());
+
+    // 匯入按鈕
+    document.getElementById('importBtn').addEventListener('click', () => {
+      document.getElementById('importFile').click();
+    });
+
+    document.getElementById('importFile').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        this.importProgress(file);
+      }
+    });
   },
 
   updateStatistics() {
     const stats = Storage.getStatistics();
     document.getElementById('statTotal').textContent = stats.total;
+    document.getElementById('statMastery').textContent = stats.masteryRate + '%';
+    document.getElementById('statAvgReviews').textContent = stats.avgReviews;
+    document.getElementById('statLevel4').textContent = stats.level4;
     document.getElementById('statLevel3').textContent = stats.level3;
     document.getElementById('statLevel2').textContent = stats.level2;
     document.getElementById('statLevel1').textContent = stats.level1;
@@ -167,14 +197,15 @@ const App = {
     this.progressChart = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: ['熟悉 (3級)', '一般 (2級)', '不熟 (1級)', '未學習'],
+        labels: ['完全掌握 (4級)', '較熟悉 (3級)', '不太熟 (2級)', '不會 (1級)', '未學習'],
         datasets: [{
-          data: [stats.level3, stats.level2, stats.level1, stats.notStarted],
+          data: [stats.level4, stats.level3, stats.level2, stats.level1, stats.notStarted],
           backgroundColor: [
             '#10b981',
-            '#3b82f6', 
+            '#3b82f6',
             '#f59e0b',
-            '#e5e7eb'
+            '#ef4444',
+            '#6b7280'
           ],
           borderWidth: 0
         }]
@@ -192,7 +223,8 @@ const App = {
                 family: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
               },
               usePointStyle: true,
-              pointStyle: 'circle'
+              pointStyle: 'circle',
+              color: '#ffffff'
             }
           },
           tooltip: {
@@ -297,6 +329,56 @@ const App = {
     });
   },
 
+  renderHeatmap() {
+    const heatmapData = Storage.getHeatmapData(30);
+    const container = document.getElementById('heatmap');
+    const maxCount = Math.max(...heatmapData.map(d => d.count), 1);
+    
+    let html = '<div class="heatmap-grid">';
+    heatmapData.forEach((day) => {
+      const intensity = day.count / maxCount;
+      const bgColor = day.count === 0 
+        ? 'rgba(75, 85, 99, 0.3)' 
+        : `rgba(139, 92, 246, ${0.2 + intensity * 0.8})`;
+      
+      html += `<div class="heatmap-cell" style="background-color: ${bgColor};" title="${day.date}: ${day.count} 次複習"><span class="heatmap-count">${day.count || ''}</span></div>`;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+  },
+
+  renderWordRankings() {
+    const difficultWords = Storage.getDifficultWords(5);
+    document.getElementById('difficultWords').innerHTML = this.renderRankingList(difficultWords);
+    
+    const quickWords = Storage.getQuickMasteredWords(5);
+    document.getElementById('quickWords').innerHTML = this.renderRankingList(quickWords);
+    
+    const forgetfulWords = Storage.getForgetfulWords(5);
+    document.getElementById('forgetfulWords').innerHTML = this.renderRankingList(forgetfulWords);
+  },
+
+  renderRankingList(words) {
+    if (words.length === 0) {
+      return '<p class="no-data">暫無數據</p>';
+    }
+    return words.map((word, index) => `
+      <div class="ranking-item">
+        <div class="ranking-number">${index + 1}</div>
+        <div class="ranking-word">
+          <div class="ranking-word-pair">
+            <span>${word.english}</span>
+            <span class="word-cn-small">${word.chinese}</span>
+          </div>
+          <div class="ranking-stats">
+            <span class="level-badge-small">Lv.${word.level}</span>
+            <span class="review-count-small">${word.reviewCount}次</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  },
+
   filterWords(filter) {
     const progress = Storage.getProgress();
     let filteredWords = [];
@@ -352,6 +434,92 @@ const App = {
       Storage.resetWord(wordId);
       this.loadReviewMode();
     }
+  },
+
+  // 匯出進度
+  exportProgress() {
+    const progress = Storage.getProgress();
+    const dailyProgress = Storage.getDailyProgressRaw();
+    
+    const data = {
+      version: '1.0',
+      exportDate: new Date().toISOString(),
+      wordProgress: progress,
+      dailyProgress: dailyProgress,
+      totalWords: WORDS.length,
+      statistics: Storage.getStatistics()
+    };
+    
+    // 建立下載連結
+    const dataStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `flashcard-progress-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    alert('✅ 進度已匯出！檔案已下載到你的裝置。');
+  },
+
+  // 匯入進度
+  importProgress(file) {
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        
+        // 驗證資料格式
+        if (!data.wordProgress || !data.version) {
+          alert('❌ 檔案格式錯誤！請選擇正確的進度檔案。');
+          return;
+        }
+        
+        // 詢問是否覆蓋現有進度
+        const currentStats = Storage.getStatistics();
+        const hasCurrentProgress = currentStats.level1 + currentStats.level2 + currentStats.level3 > 0;
+        
+        if (hasCurrentProgress) {
+          const confirmMsg = `目前已有學習進度。\n\n` +
+            `匯入檔案：${data.statistics.level1 + data.statistics.level2 + data.statistics.level3} 個已學習單字\n` +
+            `目前進度：${currentStats.level1 + currentStats.level2 + currentStats.level3} 個已學習單字\n\n` +
+            `選擇匯入方式：\n` +
+            `- 確定：覆蓋現有進度\n` +
+            `- 取消：保留現有進度`;
+          
+          if (!confirm(confirmMsg)) {
+            return;
+          }
+        }
+        
+        // 匯入資料
+        localStorage.setItem('flashcard_progress', JSON.stringify(data.wordProgress));
+        if (data.dailyProgress) {
+          localStorage.setItem('flashcard_daily_progress', JSON.stringify(data.dailyProgress));
+        }
+        
+        alert('✅ 進度匯入成功！');
+        this.loadReviewMode();
+        
+        // 清空 file input
+        document.getElementById('importFile').value = '';
+        
+      } catch (error) {
+        alert('❌ 匯入失敗：檔案格式錯誤或損壞。');
+        console.error('Import error:', error);
+      }
+    };
+    
+    reader.onerror = () => {
+      alert('❌ 讀取檔案失敗！');
+    };
+    
+    reader.readAsText(file);
   }
 };
 

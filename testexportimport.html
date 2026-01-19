@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>測試匯出/匯入功能</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <div style="background: #2a2a2a; padding: 40px; border-radius: 20px; margin-top: 50px;">
+      <h1 style="color: white; text-align: center; margin-bottom: 30px;">匯出/匯入功能測試</h1>
+      
+      <div id="testLog" style="background: #1a1a1a; padding: 20px; border-radius: 12px; margin-bottom: 30px; color: #10b981; font-family: monospace; font-size: 14px; min-height: 100px;">
+        等待測試...
+      </div>
+      
+      <div class="data-management">
+        <button id="exportBtn" class="export-btn">📥 匯出進度</button>
+        <button id="importBtn" class="import-btn">📤 匯入進度</button>
+        <input type="file" id="importFile" accept=".json" style="display: none;">
+      </div>
+      
+      <div style="color: #808080; text-align: center; margin-top: 20px; font-size: 14px;">
+        <p>✅ 如果按鈕有反應，會在上方顯示訊息</p>
+        <p>❌ 如果按鈕沒反應，可能是 JS 載入失敗</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="words.js"></script>
+  <script src="storage.js"></script>
+  
+  <script>
+    const log = document.getElementById('testLog');
+    
+    function addLog(message, isError = false) {
+      const time = new Date().toLocaleTimeString();
+      const color = isError ? '#ef4444' : '#10b981';
+      log.innerHTML += `<div style="color: ${color};">[${time}] ${message}</div>`;
+      log.scrollTop = log.scrollHeight;
+    }
+    
+    // 檢查依賴
+    if (typeof WORDS === 'undefined') {
+      addLog('❌ WORDS 未載入', true);
+    } else {
+      addLog(`✅ WORDS 載入成功 (${WORDS.length} 個單字)`);
+    }
+    
+    if (typeof Storage === 'undefined') {
+      addLog('❌ Storage 未載入', true);
+    } else {
+      addLog('✅ Storage 載入成功');
+    }
+    
+    // 測試匯出功能
+    document.getElementById('exportBtn').addEventListener('click', function() {
+      addLog('📥 匯出按鈕被點擊了！');
+      
+      try {
+        const progress = Storage.getProgress();
+        const dailyProgress = Storage.getDailyProgressRaw ? Storage.getDailyProgressRaw() : {};
+        
+        const data = {
+          version: '1.0',
+          exportDate: new Date().toISOString(),
+          wordProgress: progress,
+          dailyProgress: dailyProgress,
+          totalWords: WORDS.length,
+          statistics: Storage.getStatistics()
+        };
+        
+        addLog(`✅ 資料準備完成: ${Object.keys(progress).length} 個單字進度`);
+        
+        const dataStr = JSON.stringify(data, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `flashcard-test-${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        addLog('✅ 檔案下載成功！');
+        
+      } catch (error) {
+        addLog('❌ 匯出失敗: ' + error.message, true);
+        console.error(error);
+      }
+    });
+    
+    // 測試匯入功能
+    document.getElementById('importBtn').addEventListener('click', function() {
+      addLog('📤 匯入按鈕被點擊了！');
+      document.getElementById('importFile').click();
+    });
+    
+    document.getElementById('importFile').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) {
+        addLog('⚠️ 沒有選擇檔案');
+        return;
+      }
+      
+      addLog(`📁 選擇了檔案: ${file.name}`);
+      
+      const reader = new FileReader();
+      
+      reader.onload = function(event) {
+        try {
+          const data = JSON.parse(event.target.result);
+          addLog('✅ 檔案解析成功');
+          addLog(`📊 檔案包含 ${Object.keys(data.wordProgress || {}).length} 個單字進度`);
+          
+          // 實際匯入
+          localStorage.setItem('flashcard_progress', JSON.stringify(data.wordProgress));
+          if (data.dailyProgress) {
+            localStorage.setItem('flashcard_daily_progress', JSON.stringify(data.dailyProgress));
+          }
+          
+          addLog('✅ 進度匯入成功！');
+          
+        } catch (error) {
+          addLog('❌ 檔案解析失敗: ' + error.message, true);
+          console.error(error);
+        }
+      };
+      
+      reader.onerror = function() {
+        addLog('❌ 讀取檔案失敗', true);
+      };
+      
+      reader.readAsText(file);
+    });
+    
+    addLog('✅ 測試頁面初始化完成');
+  </script>
+</body>
+</html>

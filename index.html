@@ -28,6 +28,7 @@
         <button id="rating1" class="rating-btn">1</button>
         <button id="rating2" class="rating-btn">2</button>
         <button id="rating3" class="rating-btn">3</button>
+        <button id="rating4" class="rating-btn">4</button>
       </div>
     </section>
 
@@ -40,15 +41,27 @@
           <div class="stat-value" id="statTotal">0</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">已掌握 (3級)</div>
+          <div class="stat-label">掌握率</div>
+          <div class="stat-value" id="statMastery">0%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">平均複習次數</div>
+          <div class="stat-value" id="statAvgReviews">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">完全掌握 (4級)</div>
+          <div class="stat-value" id="statLevel4">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">較熟悉 (3級)</div>
           <div class="stat-value" id="statLevel3">0</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">一般 (2級)</div>
+          <div class="stat-label">不太熟 (2級)</div>
           <div class="stat-value" id="statLevel2">0</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">需加強 (1級)</div>
+          <div class="stat-label">不會 (1級)</div>
           <div class="stat-value" id="statLevel1">0</div>
         </div>
         <div class="stat-card">
@@ -69,14 +82,37 @@
         </div>
       </div>
 
+      <!-- 學習熱力圖 -->
+      <div class="heatmap-container">
+        <h3 class="chart-title">學習熱力圖（過去 30 天）</h3>
+        <div id="heatmap"></div>
+      </div>
+
+      <!-- 單字排行榜 -->
+      <div class="word-rankings">
+        <div class="ranking-section">
+          <h3>🔥 困難單字 Top 5</h3>
+          <div id="difficultWords"></div>
+        </div>
+        <div class="ranking-section">
+          <h3>💡 快速掌握 Top 5</h3>
+          <div id="quickWords"></div>
+        </div>
+        <div class="ranking-section">
+          <h3>😅 容易忘記 Top 5</h3>
+          <div id="forgetfulWords"></div>
+        </div>
+      </div>
+
       <!-- 篩選器 -->
       <div class="filter-section">
         <h3>篩選單字</h3>
         <div class="filter-buttons">
           <button class="filter-btn active" data-filter="all">全部</button>
-          <button class="filter-btn" data-filter="3">熟悉 (3級)</button>
-          <button class="filter-btn" data-filter="2">一般 (2級)</button>
-          <button class="filter-btn" data-filter="1">不熟 (1級)</button>
+          <button class="filter-btn" data-filter="4">完全掌握 (4級)</button>
+          <button class="filter-btn" data-filter="3">較熟悉 (3級)</button>
+          <button class="filter-btn" data-filter="2">不太熟 (2級)</button>
+          <button class="filter-btn" data-filter="1">不會 (1級)</button>
           <button class="filter-btn" data-filter="not-started">未學習</button>
         </div>
       </div>
@@ -84,6 +120,13 @@
       <!-- 單字列表 -->
       <div id="wordList">
         <!-- 單字列表會動態生成 -->
+      </div>
+
+      <!-- 資料管理按鈕 -->
+      <div class="data-management">
+        <button id="exportBtn" class="export-btn">📥 匯出進度</button>
+        <button id="importBtn" class="import-btn">📤 匯入進度</button>
+        <input type="file" id="importFile" accept=".json" style="display: none;">
       </div>
 
       <!-- 重置按鈕 -->
