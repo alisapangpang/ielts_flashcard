@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>測試 - Flashcard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f0f0f0;
+    }
+    .test-box {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .success { color: green; font-weight: bold; }
+    .error { color: red; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Flashcard 系統測試</h1>
+  
+  <div class="test-box">
+    <h2>檔案載入測試</h2>
+    <p id="test1">測試中...</p>
+    <p id="test2">測試中...</p>
+    <p id="test3">測試中...</p>
+  </div>
+  
+  <div class="test-box">
+    <h2>單字資料</h2>
+    <p>總共 <span id="wordCount">?</span> 個單字</p>
+    <div id="wordList"></div>
+  </div>
+
+  <script src="words.js"></script>
+  <script src="storage.js"></script>
+  <script src="app.js"></script>
+  
+  <script>
+    // 測試 1: words.js 是否載入
+    if (typeof WORDS !== 'undefined') {
+      document.getElementById('test1').innerHTML = '✓ words.js 載入成功';
+      document.getElementById('test1').className = 'success';
+    } else {
+      document.getElementById('test1').innerHTML = '✗ words.js 載入失敗';
+      document.getElementById('test1').className = 'error';
+    }
+    
+    // 測試 2: storage.js 是否載入
+    if (typeof Storage !== 'undefined') {
+      document.getElementById('test2').innerHTML = '✓ storage.js 載入成功';
+      document.getElementById('test2').className = 'success';
+    } else {
+      document.getElementById('test2').innerHTML = '✗ storage.js 載入失敗';
+      document.getElementById('test2').className = 'error';
+    }
+    
+    // 測試 3: app.js 是否載入
+    if (typeof App !== 'undefined') {
+      document.getElementById('test3').innerHTML = '✓ app.js 載入成功';
+      document.getElementById('test3').className = 'success';
+    } else {
+      document.getElementById('test3').innerHTML = '✗ app.js 載入失敗';
+      document.getElementById('test3').className = 'error';
+    }
+    
+    // 顯示單字
+    if (typeof WORDS !== 'undefined') {
+      document.getElementById('wordCount').textContent = WORDS.length;
+      document.getElementById('wordList').innerHTML = WORDS.map(word => 
+        `<p>ID: ${word.id} | ${word.chinese} - ${word.english} (${word.pos || '無'})</p>`
+      ).join('');
+    }
+  </script>
+</body>
+</html>

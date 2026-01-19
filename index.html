@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flashcard 單字學習系統</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- 導航列 -->
+    <div class="nav">
+      <button id="learnBtn" class="nav-btn active">學習模式</button>
+      <button id="reviewBtn" class="nav-btn">數據回顧</button>
+    </div>
+
+    <!-- 學習模式 -->
+    <section id="learnSection">
+      <div id="progress">載入中...</div>
+      
+      <div class="card-container">
+        <div id="flashcard">
+          <!-- 卡片內容會動態生成 -->
+        </div>
+      </div>
+
+      <div class="rating-buttons">
+        <button id="rating1" class="rating-btn">1</button>
+        <button id="rating2" class="rating-btn">2</button>
+        <button id="rating3" class="rating-btn">3</button>
+      </div>
+    </section>
+
+    <!-- 回顧模式 -->
+    <section id="reviewSection" style="display: none;">
+      <!-- 統計概覽 -->
+      <div class="stats-overview">
+        <div class="stat-card">
+          <div class="stat-label">總單字數</div>
+          <div class="stat-value" id="statTotal">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">已掌握 (3級)</div>
+          <div class="stat-value" id="statLevel3">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">一般 (2級)</div>
+          <div class="stat-value" id="statLevel2">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">需加強 (1級)</div>
+          <div class="stat-value" id="statLevel1">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">未學習</div>
+          <div class="stat-value" id="statNotStarted">0</div>
+        </div>
+      </div>
+
+      <!-- 圖表 -->
+      <div class="charts-container">
+        <div class="chart-container">
+          <h3 class="chart-title">單字掌握分佈</h3>
+          <canvas id="progressChart"></canvas>
+        </div>
+        <div class="chart-container">
+          <h3 class="chart-title">每日學習進度</h3>
+          <canvas id="dailyChart"></canvas>
+        </div>
+      </div>
+
+      <!-- 篩選器 -->
+      <div class="filter-section">
+        <h3>篩選單字</h3>
+        <div class="filter-buttons">
+          <button class="filter-btn active" data-filter="all">全部</button>
+          <button class="filter-btn" data-filter="3">熟悉 (3級)</button>
+          <button class="filter-btn" data-filter="2">一般 (2級)</button>
+          <button class="filter-btn" data-filter="1">不熟 (1級)</button>
+          <button class="filter-btn" data-filter="not-started">未學習</button>
+        </div>
+      </div>
+
+      <!-- 單字列表 -->
+      <div id="wordList">
+        <!-- 單字列表會動態生成 -->
+      </div>
+
+      <!-- 重置按鈕 -->
+      <button id="resetAll">重置所有進度</button>
+    </section>
+  </div>
+
+  <!-- 引入 Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  
+  <!-- 引入應用程式檔案 -->
+  <script src="words.js"></script>
+  <script src="storage.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
