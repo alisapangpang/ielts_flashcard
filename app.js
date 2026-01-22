@@ -70,19 +70,44 @@ const App = {
   },
 
   getSortedWords() {
-    return [...WORDS].sort((a, b) => {
-      const progressA = Storage.getWordProgress(a.id);
-      const progressB = Storage.getWordProgress(b.id);
+    const progress = Storage.getProgress();
+    
+    // 將單字分組
+    const notStarted = []; // 未學習
+    const level1 = []; // 最不熟
+    const level2 = [];
+    const level3 = [];
+    const level4 = []; // 最熟
+    
+    WORDS.forEach(word => {
+      const wordProgress = progress[word.id];
+      const level = wordProgress ? wordProgress.level : 0;
       
-      const levelA = progressA.level || 0;
-      const levelB = progressB.level || 0;
-      
-      if (levelA === 0 && levelB === 0) return 0;
-      if (levelA === 0) return 1;
-      if (levelB === 0) return -1;
-      
-      return levelA - levelB;
+      if (level === 0) notStarted.push(word);
+      else if (level === 1) level1.push(word);
+      else if (level === 2) level2.push(word);
+      else if (level === 3) level3.push(word);
+      else if (level === 4) level4.push(word);
     });
+    
+    // 洗牌函數
+    const shuffle = (array) => {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    };
+    
+    // 順序：未學習 → 1級 → 2級 → 3級 → 4級（各組內隨機）
+    return [
+      ...shuffle(notStarted),
+      ...shuffle(level1),
+      ...shuffle(level2),
+      ...shuffle(level3),
+      ...shuffle(level4)
+    ];
   },
 
   showCurrentWord() {
